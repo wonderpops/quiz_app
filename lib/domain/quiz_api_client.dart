@@ -1,8 +1,10 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
+import 'package:quiz_app/domain/keys.dart';
+
 class QuizAPIClient {
-  final String _apiKey = 'j24WhINsXuMG7PszLmbkLHqRiXRoFnjRZrHxkwDa';
+  final String _apiKey = quizAPIKey;
   final _client = http.Client();
   final String _host = 'https://quizapi.io/api/v1';
   final int _limit = 10;
