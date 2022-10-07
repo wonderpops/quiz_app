@@ -35,6 +35,10 @@ dependencies:
   cloud_firestore: ^3.4.9
   firebase_core: ^1.23.0
   intl: ^0.17.0
+  flutter_bloc: ^8.1.1
+  auto_size_text: ^3.0.0
+  simple_animations: ^5.0.0+2
+  flutter_staggered_animations: ^1.1.1
 
 
   # The following adds the Cupertino Icons font to your application.

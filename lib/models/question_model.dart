@@ -1,6 +1,6 @@
 class Question {
   final String question;
-  final List answers;
+  final List<Answer> answers;
   final int correctAnswersCount;
   bool isComplete = false;
   int userCorrectAnswersCount = 0;
