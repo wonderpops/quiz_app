@@ -145,8 +145,7 @@ class _QuizScreenWidgetState extends State<QuizScreenWidget> {
                                 itemCount: qBlocState.questions.length,
                                 itemBuilder: (context, index) {
                                   return _QWidget(
-                                    questionText:
-                                        qBlocState.questions[index].question,
+                                    question: qBlocState.questions[index],
                                   );
                                 }),
                           ),
@@ -166,8 +165,8 @@ class _QuizScreenWidgetState extends State<QuizScreenWidget> {
 }
 
 class _QWidget extends StatelessWidget {
-  const _QWidget({super.key, required this.questionText});
-  final String questionText;
+  const _QWidget({super.key, required this.question});
+  final Question question;
 
   @override
   Widget build(BuildContext context) {
@@ -182,13 +181,38 @@ class _QWidget extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Center(
-            child: AutoSizeText(
-              questionText,
-              minFontSize: 24,
-              maxLines: 4,
-              textAlign: TextAlign.center,
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Visibility(
+                  visible: question.correctAnswersCount > 1,
+                  child: Container(
+                    width: 200,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: colorScheme.primary.withOpacity(.5)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          const Icon(Icons.info_outline_rounded),
+                          AutoSizeText(
+                              'Choose ${question.correctAnswersCount} ansers'),
+                        ],
+                      ),
+                    ),
+                  )),
+              const SizedBox(height: 16),
+              Center(
+                child: AutoSizeText(
+                  question.question,
+                  minFontSize: 24,
+                  maxLines: 4,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
           ),
         ),
       ),
