@@ -12,10 +12,12 @@ part 'quiz_event.dart';
 part 'quiz_state.dart';
 
 class QuizBloc extends Bloc<QuizEvent, QuizState> {
+  List<Question> questions = [];
+  int userScore = 0;
+
   QuizBloc() : super(QuizInitial()) {
     on<QuizThemeAndDifficultySelectEvent>(onThemeAndDifficultySelect);
     on<QuizLoadQuestionsEvent>(onQuizLoadQuestions);
-    on<UpdateLoadedQuestionsEvent>(onUpdateLoadedQuestions);
   }
 
   onThemeAndDifficultySelect(
@@ -27,42 +29,21 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
   onQuizLoadQuestions(
       QuizLoadQuestionsEvent event, Emitter<QuizState> emit) async {
     emit(QuizLoadingQuestionsState());
-    await Future.delayed(Duration(seconds: 1));
+
+    this.questions = [];
     final QuizAPIClient qAPI = QuizAPIClient();
 
-    final questions =
+    final receivedQuestions =
         await qAPI.getQuestions(event.qTheme.name, event.qDifficulty.name);
 
-    final parsedQuestions = parseQuestions(questions);
-    inspect(parsedQuestions);
-    // } catch (e) {
-    //   ColorScheme colorScheme = Theme.of(context).colorScheme;
-    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    //     behavior: SnackBarBehavior.floating,
-    //     backgroundColor: colorScheme.tertiaryContainer,
-    //     elevation: 20,
-    //     duration: const Duration(seconds: 1),
-    //     content: Text(
-    //       e.toString(),
-    //       style: TextStyle(color: colorScheme.inverseSurface),
-    //     ),
-    //   ));
-    //   // Navigator.of(context).pushReplacement(
-    //   //   PageRouteBuilder(
-    //   //     pageBuilder: (_, __, ___) => const HomeScreenWidget(),
-    //   //     transitionDuration: const Duration(milliseconds: 300),
-    //   //     transitionsBuilder: (_, a, __, c) =>
-    //   //         FadeTransition(opacity: a, child: c),
-    //   //   ),
-    //   // );
-    // }
-    // }
-    emit(QuizLoadedQuestionsState(
-        questions: parsedQuestions, currentQuestion: 0));
+    parseQuestions(receivedQuestions);
+
+    this.userScore = 100 * questions.length;
+
+    emit(QuizStartedState(questions: this.questions));
   }
 
-  List<Question> parseQuestions(List questions) {
-    List<Question> parsedQuestions = [];
+  parseQuestions(List questions) {
     for (var q in questions) {
       final List k = q['answers'].keys.toList();
       List a = q['answers'].values.toList();
@@ -79,12 +60,7 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
                 : false;
         return Answer(text: entry.value, isCorrect: isCorrect);
       }).toList();
-      // List<Answer> asa = [];
-      // for (var i in answers) {
-      //   if (i) {
-      //     asa.add(i);
-      //   }
-      // }
+
       int correctAnswersCount = 0;
       final List cA = q['correct_answers'].values.toList();
       for (var a in cA) {
@@ -92,19 +68,11 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
           correctAnswersCount += 1;
         }
       }
-      answers.removeWhere((e) => e == null);
-      parsedQuestions.add(Question(
+
+      this.questions.add(Question(
           question: q['question'],
           answers: answers,
           correctAnswersCount: correctAnswersCount));
     }
-    // inspect(parsedQuestions);
-    return parsedQuestions;
-  }
-
-  onUpdateLoadedQuestions(
-      UpdateLoadedQuestionsEvent event, Emitter<QuizState> emit) async {
-    emit(QuizLoadedQuestionsState(
-        questions: event.questions, currentQuestion: event.currentQuestion));
   }
 }

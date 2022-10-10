@@ -12,11 +12,11 @@ class ResultsScreenWidget extends StatelessWidget {
 
   int getUserRightAnswersCount() {
     int count = 0;
-    for (Question q in quiz.loadedQuestions) {
-      if (q.userCorrectAnswersCount == q.correctAnswersCount) {
-        count += 1;
-      }
-    }
+    // for (Question q in quiz.loadedQuestions) {
+    //   if (q.userCorrectAnswersCount == q.correctAnswersCount) {
+    //     count += 1;
+    //   }
+    // }
     return count;
   }
 
@@ -273,11 +273,11 @@ class _UploadResultsButtonWidgetState
                   FirebaseFirestore.instance.collection('quiz_results');
 
               int cAnswersCount = 0;
-              for (Question q in widget.quiz.loadedQuestions) {
-                if (q.userCorrectAnswersCount == q.correctAnswersCount) {
-                  cAnswersCount += 1;
-                }
-              }
+              // for (Question q in widget.quiz.loadedQuestions) {
+              //   if (q.userCorrectAnswersCount == q.correctAnswersCount) {
+              //     cAnswersCount += 1;
+              //   }
+              // }
               results.add({
                 'date': Timestamp.fromDate(DateTime.now()),
                 'quiz_theme': widget.quiz.quizTheme!.name,

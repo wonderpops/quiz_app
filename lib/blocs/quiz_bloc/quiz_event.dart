@@ -17,11 +17,3 @@ class QuizLoadQuestionsEvent extends QuizEvent {
 
   QuizLoadQuestionsEvent({required this.qTheme, required this.qDifficulty});
 }
-
-class UpdateLoadedQuestionsEvent extends QuizEvent {
-  final List<Question> questions;
-  final int currentQuestion;
-
-  UpdateLoadedQuestionsEvent(
-      {required this.questions, required this.currentQuestion});
-}

@@ -174,7 +174,7 @@ class _BeginButtonWidgetState extends State<_BeginButtonWidget>
 
     return BlocConsumer<QuizBloc, QuizState>(
       listener: (context, state) {
-        if (state is QuizLoadedQuestionsState) {
+        if (state is QuizStartedState) {
           Navigator.of(context).push(
             PageRouteBuilder(
               pageBuilder: (_, __, ___) => QuizScreenWidget(),
@@ -277,7 +277,7 @@ class _BeginButtonWidgetState extends State<_BeginButtonWidget>
                   );
 
                 case QuizLoadingQuestionsState:
-                case QuizLoadedQuestionsState:
+                case QuizStartedState:
                   _animController.reverse();
                   // print(_animController.value);
                   return Center(

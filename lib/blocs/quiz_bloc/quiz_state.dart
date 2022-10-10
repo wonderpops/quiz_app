@@ -15,10 +15,8 @@ class QuizThemeAndDifficultySelectedState extends QuizState {
 
 class QuizLoadingQuestionsState extends QuizState {}
 
-class QuizLoadedQuestionsState extends QuizState {
+class QuizStartedState extends QuizState {
   final List<Question> questions;
-  int currentQuestion;
 
-  QuizLoadedQuestionsState(
-      {required this.questions, required this.currentQuestion});
+  QuizStartedState({required this.questions});
 }

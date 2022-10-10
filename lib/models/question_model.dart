@@ -3,7 +3,7 @@ class Question {
   final List<Answer> answers;
   final int correctAnswersCount;
   bool isComplete = false;
-  int userCorrectAnswersCount = 0;
+  int userAnswersCount = 0;
 
   Question({
     required this.question,
