@@ -86,7 +86,6 @@ class _QuizScreenWidgetState extends State<QuizScreenWidget>
                                 },
                                 itemCount: qBlocState.questions.length,
                                 itemBuilder: (context, index) {
-                                  print(index);
                                   return _QWidget(
                                     questionText:
                                         qBlocState.questions[index].question,
@@ -157,45 +156,82 @@ class _AWidgetState extends State<_AWidget> {
     super.dispose();
   }
 
+  List<Widget> getAnswerWidgets(List<Answer> answers, Duration duration) {
+    List<Widget> answerWidgets = [];
+    for (var i = 0; i < answers.length; i++) {
+      answerWidgets.add(_AAW(
+        answer: answers[i],
+        delay: Duration(milliseconds: i * 100 + 100),
+        duration: duration,
+      ));
+    }
+    return answerWidgets;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: Opacity(
-          opacity: 0.5,
-          child: ListView.builder(
-              itemCount: widget.answers.length,
-              itemBuilder: ((context, index) =>
-                  _AAW(answer: widget.answers[index]))),
-        ),
-      ),
+          borderRadius: BorderRadius.circular(30),
+          child: Column(
+            children: getAnswerWidgets(
+                widget.answers, const Duration(milliseconds: 300)),
+          )),
     );
   }
 }
 
 class _AAW extends StatefulWidget {
-  const _AAW({super.key, required this.answer});
+  const _AAW(
+      {super.key,
+      required this.answer,
+      required this.delay,
+      required this.duration});
   final Answer answer;
+  final Duration delay;
+  final Duration duration;
 
   @override
   State<_AAW> createState() => _AAWState();
 }
 
-class _AAWState extends State<_AAW> {
-  late AnimationController widthController;
-  late Animation<double> width;
+class _AAWState extends State<_AAW> with AnimationMixin {
+  late AnimationController offsetController;
+  late AnimationController opacityController;
+
+  late Animation<double> offsetY;
+  late Animation<double> opacity;
 
   @override
   void initState() {
-    // widthController = createController();
-    // width = Tween<double>(begin: 30, end: 0).animate(widthController);
-    // Future.delayed(Duration(milliseconds: widget.delay)).then((value) {
-    //   widthController.play(duration: const Duration(milliseconds: 500));
-    //   setState(() {});
-    // });
+    offsetController = createController();
+    opacityController = createController();
+
+    offsetY = Tween<double>(begin: 30, end: 0).animate(offsetController);
+    opacity = Tween<double>(begin: 0, end: 1).animate(opacityController);
+
+    Future.delayed(widget.delay).then((value) {
+      offsetController.play(duration: widget.duration);
+      opacityController.play(duration: widget.duration);
+    });
+
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AAW oldWidget) {
+    offsetController = createController();
+    opacityController = createController();
+
+    offsetY = Tween<double>(begin: 30, end: 0).animate(offsetController);
+    opacity = Tween<double>(begin: 0, end: 1).animate(opacityController);
+
+    Future.delayed(widget.delay).then((value) {
+      offsetController.play(duration: widget.duration);
+      opacityController.play(duration: widget.duration);
+    });
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -206,23 +242,30 @@ class _AAWState extends State<_AAW> {
   @override
   Widget build(BuildContext context) {
     ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Container(
-        height: 80,
-        width: double.maxFinite,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: colorScheme.tertiaryContainer,
-        ),
+
+    return Opacity(
+      opacity: opacity.value,
+      child: Transform.translate(
+        offset: Offset(0, offsetY.value),
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Center(
-            child: AutoSizeText(
-              widget.answer.text,
-              minFontSize: 16,
-              maxLines: 4,
-              textAlign: TextAlign.center,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Container(
+            height: 80,
+            width: double.maxFinite,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: colorScheme.tertiaryContainer.withOpacity(.8),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Center(
+                child: AutoSizeText(
+                  widget.answer.text,
+                  minFontSize: 16,
+                  maxLines: 4,
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ),
           ),
         ),
