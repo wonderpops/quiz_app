@@ -166,8 +166,8 @@ class _AWidgetState extends State<_AWidget> {
             itemCount: widget.answers.length,
             itemBuilder: ((context, i) => _AAW(
                   answer: widget.answers[i],
-                  delay: Duration(milliseconds: i * 100 + 100),
-                  duration: const Duration(milliseconds: 300),
+                  delay: Duration(milliseconds: i * 50 + 50),
+                  duration: const Duration(milliseconds: 200),
                 )),
           )),
     );
@@ -239,23 +239,32 @@ class _AAWState extends State<_AAW> with AnimationMixin {
       opacity: opacity.value,
       child: Transform.translate(
         offset: Offset(0, offsetY.value),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Container(
-            height: 80,
-            width: double.maxFinite,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: colorScheme.tertiaryContainer.withOpacity(.8),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Center(
-                child: AutoSizeText(
-                  widget.answer.text,
-                  minFontSize: 16,
-                  maxLines: 4,
-                  textAlign: TextAlign.center,
+        child: GestureDetector(
+          onTap: (() {
+            widget.answer.wasPressed = true;
+            setState(() {});
+          }),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Container(
+              height: 80,
+              width: double.maxFinite,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: widget.answer.wasPressed
+                    ? widget.answer.isCorrect
+                        ? Colors.green.withOpacity(.8)
+                        : Colors.red.withOpacity(.8)
+                    : colorScheme.tertiaryContainer.withOpacity(.8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: AutoSizeText(
+                    widget.answer.text,
+                    minFontSize: 16,
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ),
