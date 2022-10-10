@@ -156,27 +156,19 @@ class _AWidgetState extends State<_AWidget> {
     super.dispose();
   }
 
-  List<Widget> getAnswerWidgets(List<Answer> answers, Duration duration) {
-    List<Widget> answerWidgets = [];
-    for (var i = 0; i < answers.length; i++) {
-      answerWidgets.add(_AAW(
-        answer: answers[i],
-        delay: Duration(milliseconds: i * 100 + 100),
-        duration: duration,
-      ));
-    }
-    return answerWidgets;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: ClipRRect(
           borderRadius: BorderRadius.circular(30),
-          child: Column(
-            children: getAnswerWidgets(
-                widget.answers, const Duration(milliseconds: 300)),
+          child: ListView.builder(
+            itemCount: widget.answers.length,
+            itemBuilder: ((context, i) => _AAW(
+                  answer: widget.answers[i],
+                  delay: Duration(milliseconds: i * 100 + 100),
+                  duration: const Duration(milliseconds: 300),
+                )),
           )),
     );
   }
