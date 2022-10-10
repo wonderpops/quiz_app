@@ -21,25 +21,29 @@ class QuizScreenWidget extends StatefulWidget {
 class _QuizScreenWidgetState extends State<QuizScreenWidget> {
   int currentQuestionIndex = 0;
   late QuizBloc qBloc;
-  late QuizStartedState qBlocState;
+  late List<Question> questions;
+  late int userScore;
   late PageController pageController;
 
   @override
   void initState() {
     qBloc = BlocProvider.of<QuizBloc>(context);
-    qBlocState = qBloc.state as QuizStartedState;
+    QuizStartedState qBlocState = qBloc.state as QuizStartedState;
+
+    questions = qBlocState.questions;
+    userScore = 100 * questions.length;
 
     pageController = PageController();
     super.initState();
   }
 
   checkAnswer(Answer answer) {
-    Question currentQuestion = qBlocState.questions[currentQuestionIndex];
+    Question currentQuestion = questions[currentQuestionIndex];
     currentQuestion.userAnswersCount += 1;
     if (currentQuestion.userAnswersCount <=
         currentQuestion.correctAnswersCount) {
       if (!answer.isCorrect) {
-        qBloc.userScore -= currentQuestion.correctAnswersCount == 1 ? 100 : 50;
+        userScore -= currentQuestion.correctAnswersCount == 1 ? 100 : 50;
       }
     }
     if (currentQuestion.userAnswersCount ==
@@ -55,15 +59,15 @@ class _QuizScreenWidgetState extends State<QuizScreenWidget> {
   }
 
   moveToNextNotAnsweredQuestion() {
-    if ((currentQuestionIndex + 1 < qBloc.questions.length)) {
-      if (!qBlocState.questions[currentQuestionIndex + 1].isComplete) {
+    if ((currentQuestionIndex + 1 < questions.length)) {
+      if (!questions[currentQuestionIndex + 1].isComplete) {
         moveToQuestion(currentQuestionIndex + 1);
         return;
       }
     }
     int index = -1;
-    for (var i = 0; i < qBloc.questions.length; i++) {
-      if (!qBloc.questions[i].isComplete) {
+    for (var i = 0; i < questions.length; i++) {
+      if (!questions[i].isComplete) {
         moveToQuestion(i);
         return;
       }
@@ -74,7 +78,7 @@ class _QuizScreenWidgetState extends State<QuizScreenWidget> {
   }
 
   endQuiz() {
-    qBloc.add(QuizEndedEvent());
+    qBloc.add(QuizEndedEvent(questions: questions, userScore: userScore));
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => const ResultsScreenWidget(),
@@ -125,7 +129,7 @@ class _QuizScreenWidgetState extends State<QuizScreenWidget> {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             child: AutoSizeText(
-                              'Question ${currentQuestionIndex + 1}/${qBlocState.questions.length}',
+                              'Question ${currentQuestionIndex + 1}/${questions.length}',
                               minFontSize: 30,
                               maxLines: 1,
                               style: const TextStyle(
@@ -142,18 +146,18 @@ class _QuizScreenWidgetState extends State<QuizScreenWidget> {
 
                                   setState(() {});
                                 },
-                                itemCount: qBlocState.questions.length,
+                                itemCount: questions.length,
                                 itemBuilder: (context, index) {
                                   return _QWidget(
-                                    question: qBlocState.questions[index],
+                                    question: questions[index],
                                   );
                                 }),
                           ),
                           Flexible(
                               flex: 2,
                               child: _AWidget(
-                                answers: qBlocState
-                                    .questions[currentQuestionIndex].answers,
+                                answers:
+                                    questions[currentQuestionIndex].answers,
                                 checkAnswer: checkAnswer,
                               ))
                         ],

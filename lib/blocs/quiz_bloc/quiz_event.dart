@@ -11,11 +11,11 @@ class QuizThemeAndDifficultySelectEvent extends QuizEvent {
       {required this.qTheme, required this.qDifficulty});
 }
 
-class QuizLoadQuestionsEvent extends QuizEvent {
-  final QuizTheme qTheme;
-  final QuizDifficulty qDifficulty;
+class QuizLoadQuestionsEvent extends QuizEvent {}
 
-  QuizLoadQuestionsEvent({required this.qTheme, required this.qDifficulty});
+class QuizEndedEvent extends QuizEvent {
+  final List<Question> questions;
+  final int userScore;
+
+  QuizEndedEvent({required this.questions, required this.userScore});
 }
-
-class QuizEndedEvent extends QuizEvent {}

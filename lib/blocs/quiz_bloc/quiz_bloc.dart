@@ -12,10 +12,8 @@ part 'quiz_event.dart';
 part 'quiz_state.dart';
 
 class QuizBloc extends Bloc<QuizEvent, QuizState> {
-  List<Question> questions = [];
   late QuizTheme _quizTheme;
   late QuizDifficulty _quizDifficulty;
-  int userScore = 0;
 
   QuizBloc() : super(QuizInitial()) {
     on<QuizThemeAndDifficultySelectEvent>(onThemeAndDifficultySelect);
@@ -35,58 +33,58 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
       QuizLoadQuestionsEvent event, Emitter<QuizState> emit) async {
     emit(QuizLoadingQuestionsState());
 
-    this.questions = [];
+    List<Question> questions = [];
     final QuizAPIClient qAPI = QuizAPIClient();
 
     final receivedQuestions =
-        await qAPI.getQuestions(event.qTheme.name, event.qDifficulty.name);
+        await qAPI.getQuestions(_quizTheme.name, _quizDifficulty.name);
 
-    parseQuestions(receivedQuestions);
+    questions = parseQuestions(receivedQuestions);
 
-    this.userScore = 100 * questions.length;
-
-    emit(QuizStartedState(questions: this.questions));
-  }
-
-  parseQuestions(List questions) {
-    for (var q in questions) {
-      final List k = q['answers'].keys.toList();
-      List a = q['answers'].values.toList();
-      List aa = [];
-      for (var i in a) {
-        if (i != null) {
-          aa.add(i);
-        }
-      }
-      List<Answer> answers = aa.asMap().entries.map<Answer>((entry) {
-        bool isCorrect =
-            q['correct_answers']['${k[entry.key]}_correct'] == 'true'
-                ? true
-                : false;
-        return Answer(text: entry.value, isCorrect: isCorrect);
-      }).toList();
-
-      int correctAnswersCount = 0;
-      final List cA = q['correct_answers'].values.toList();
-      for (var a in cA) {
-        if (a == 'true') {
-          correctAnswersCount += 1;
-        }
-      }
-
-      this.questions.add(Question(
-          question: q['question'],
-          answers: answers,
-          correctAnswersCount: correctAnswersCount));
-    }
+    emit(QuizStartedState(questions: questions));
   }
 
   onQuizEnded(QuizEndedEvent event, Emitter<QuizState> emit) async {
     emit(QuizEndedState(
-      questions: questions,
+      questions: event.questions,
       qTheme: _quizTheme,
       qDifficulty: _quizDifficulty,
-      userScore: userScore,
+      userScore: event.userScore,
     ));
   }
+}
+
+//* not in block
+List<Question> parseQuestions(List questions) {
+  List<Question> parsedQuestions = [];
+  for (var q in questions) {
+    final List k = q['answers'].keys.toList();
+    List a = q['answers'].values.toList();
+    List aa = [];
+    for (var i in a) {
+      if (i != null) {
+        aa.add(i);
+      }
+    }
+    List<Answer> answers = aa.asMap().entries.map<Answer>((entry) {
+      bool isCorrect = q['correct_answers']['${k[entry.key]}_correct'] == 'true'
+          ? true
+          : false;
+      return Answer(text: entry.value, isCorrect: isCorrect);
+    }).toList();
+
+    int correctAnswersCount = 0;
+    final List cA = q['correct_answers'].values.toList();
+    for (var a in cA) {
+      if (a == 'true') {
+        correctAnswersCount += 1;
+      }
+    }
+
+    parsedQuestions.add(Question(
+        question: q['question'],
+        answers: answers,
+        correctAnswersCount: correctAnswersCount));
+  }
+  return parsedQuestions;
 }

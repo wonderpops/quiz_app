@@ -214,13 +214,7 @@ class _BeginButtonWidgetState extends State<_BeginButtonWidget>
                             onTap: () async {
                               QuizBloc qBloc = BlocProvider.of(context);
 
-                              qBloc.add(QuizLoadQuestionsEvent(
-                                  qTheme: (state
-                                          as QuizThemeAndDifficultySelectedState)
-                                      .qTheme,
-                                  qDifficulty: (state
-                                          as QuizThemeAndDifficultySelectedState)
-                                      .qDifficulty));
+                              qBloc.add(QuizLoadQuestionsEvent());
                               // // quiz.loadedQuestions = [];
                               // // quiz.compliteQuestionsCount = 0;
                               // // quiz.userScore = 0;
