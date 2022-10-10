@@ -36,12 +36,14 @@ class _QuizScreenWidgetState extends State<QuizScreenWidget> {
   checkAnswer(Answer answer) {
     Question currentQuestion = qBlocState.questions[currentQuestionIndex];
     currentQuestion.userAnswersCount += 1;
-    if (currentQuestion.userAnswersCount <
+    if (currentQuestion.userAnswersCount <=
         currentQuestion.correctAnswersCount) {
       if (!answer.isCorrect) {
         qBloc.userScore -= currentQuestion.correctAnswersCount == 1 ? 100 : 50;
       }
-    } else {
+    }
+    if (currentQuestion.userAnswersCount ==
+        currentQuestion.correctAnswersCount) {
       currentQuestion.isComplete = true;
       moveToNextNotAnsweredQuestion();
     }
@@ -72,7 +74,15 @@ class _QuizScreenWidgetState extends State<QuizScreenWidget> {
   }
 
   endQuiz() {
-    print('Quiz ended');
+    qBloc.add(QuizEndedEvent());
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const ResultsScreenWidget(),
+        transitionDuration: const Duration(milliseconds: 300),
+        transitionsBuilder: (_, a, __, c) =>
+            FadeTransition(opacity: a, child: c),
+      ),
+    );
   }
 
   @override

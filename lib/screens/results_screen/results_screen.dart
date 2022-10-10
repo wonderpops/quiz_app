@@ -1,24 +1,17 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:quiz_app/models/question_model.dart';
 
 import 'package:quiz_app/models/quiz_model.dart';
 import 'package:quiz_app/screens/home_screen/home_screen.dart';
 
-class ResultsScreenWidget extends StatelessWidget {
-  ResultsScreenWidget({super.key, required this.quiz});
-  Quiz quiz;
+import '../../blocs/quiz_bloc/quiz_bloc.dart';
 
-  int getUserRightAnswersCount() {
-    int count = 0;
-    // for (Question q in quiz.loadedQuestions) {
-    //   if (q.userCorrectAnswersCount == q.correctAnswersCount) {
-    //     count += 1;
-    //   }
-    // }
-    return count;
-  }
+class ResultsScreenWidget extends StatelessWidget {
+  const ResultsScreenWidget({super.key});
 
   Widget quizLoadedResult(
       date, correctAnswersCount, incorrectAnswersCount, score) {
@@ -37,79 +30,108 @@ class ResultsScreenWidget extends StatelessWidget {
     );
   }
 
-  List<TableRow> getTableRowQuizResults(docs) {
+  List<TableRow> getTableRowQuizResults(context, List docs) {
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
     List<TableRow> quizResults = [
-      const TableRow(children: [
-        TableCell(
-          verticalAlignment: TableCellVerticalAlignment.bottom,
-          child: SizedBox(
-            height: 50,
-            child: Text('Date', textAlign: TextAlign.center),
+      TableRow(
+          decoration: BoxDecoration(
+            color: colorScheme.tertiaryContainer,
           ),
-        ),
-        TableCell(
-          verticalAlignment: TableCellVerticalAlignment.top,
-          child: Text('Correct', textAlign: TextAlign.center),
-        ),
-        TableCell(
-          verticalAlignment: TableCellVerticalAlignment.top,
-          child: Text('Incorrect', textAlign: TextAlign.center),
-        ),
-        TableCell(
-          verticalAlignment: TableCellVerticalAlignment.top,
-          child: Text('Score', textAlign: TextAlign.center),
-        ),
-      ])
-    ];
-    for (var d in docs) {
-      quizResults.add(TableRow(children: [
-        TableCell(
-          verticalAlignment: TableCellVerticalAlignment.bottom,
-          child: SizedBox(
-            height: 60,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                DateFormat('yyyy.MM.dd\nkk:mm')
-                    .format(DateTime.fromMillisecondsSinceEpoch(
-                        d['date'].millisecondsSinceEpoch))
-                    .toString(),
-                textAlign: TextAlign.center,
+          children: const [
+            TableCell(
+              verticalAlignment: TableCellVerticalAlignment.bottom,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text('Date', textAlign: TextAlign.center),
               ),
             ),
-          ),
-        ),
-        TableCell(
-          verticalAlignment: TableCellVerticalAlignment.middle,
-          child: Text(
-            d['correct_answers_count'].toString(),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        TableCell(
-            verticalAlignment: TableCellVerticalAlignment.middle,
-            child: Text(
-              d['incorrect_answers_count'].toString(),
-              textAlign: TextAlign.center,
-            )),
-        TableCell(
-            verticalAlignment: TableCellVerticalAlignment.middle,
-            child: Text(
-              d['score'].toString(),
-              textAlign: TextAlign.center,
-            )),
-      ]));
+            TableCell(
+              verticalAlignment: TableCellVerticalAlignment.bottom,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text('Correct', textAlign: TextAlign.center),
+              ),
+            ),
+            TableCell(
+              verticalAlignment: TableCellVerticalAlignment.bottom,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text('Incorrect', textAlign: TextAlign.center),
+              ),
+            ),
+            TableCell(
+              verticalAlignment: TableCellVerticalAlignment.bottom,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text('Score', textAlign: TextAlign.center),
+              ),
+            ),
+          ])
+    ];
+    for (var i = 0; i < docs.length; i++) {
+      quizResults.add(TableRow(
+          decoration: BoxDecoration(
+              color: i % 2 == 0
+                  ? colorScheme.tertiaryContainer.withOpacity(.2)
+                  : colorScheme.tertiaryContainer.withOpacity(.5)),
+          children: [
+            TableCell(
+              verticalAlignment: TableCellVerticalAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: AutoSizeText(
+                  DateFormat('yyyy.MM.dd\nkk:mm')
+                      .format(DateTime.fromMillisecondsSinceEpoch(
+                          docs[i]['date'].millisecondsSinceEpoch))
+                      .toString(),
+                  minFontSize: 10,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            TableCell(
+              verticalAlignment: TableCellVerticalAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  docs[i]['correct_answers_count'].toString(),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            TableCell(
+                verticalAlignment: TableCellVerticalAlignment.middle,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    docs[i]['incorrect_answers_count'].toString(),
+                    textAlign: TextAlign.center,
+                  ),
+                )),
+            TableCell(
+                verticalAlignment: TableCellVerticalAlignment.middle,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    docs[i]['score'].toString(),
+                    textAlign: TextAlign.center,
+                  ),
+                )),
+          ]));
     }
     return quizResults;
   }
 
   @override
   Widget build(BuildContext context) {
+    QuizBloc qBloc = BlocProvider.of<QuizBloc>(context);
+    QuizEndedState qBlocState = qBloc.state as QuizEndedState;
     final Stream<QuerySnapshot> results = FirebaseFirestore.instance
         .collection('quiz_results')
         .orderBy('score', descending: true)
-        .where('quiz_theme', isEqualTo: quiz.quizTheme!.name)
-        .where('quiz_difficulty', isEqualTo: quiz.quizDifficulty!.name)
+        .where('quiz_theme', isEqualTo: qBlocState.qTheme.name)
+        .where('quiz_difficulty', isEqualTo: qBlocState.qDifficulty.name)
         .limit(100)
         .snapshots();
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
@@ -122,88 +144,87 @@ class ResultsScreenWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Text(
-              'You answered right on ${getUserRightAnswersCount()}/${quiz.loadedQuestions.length} questions!',
+              'You answered right on ${(qBlocState.userScore / 100).round()}/${qBlocState.questions.length} questions!',
               style: const TextStyle(fontSize: 32),
               textAlign: TextAlign.center,
             ),
             Text(
-              'Your score: ${quiz.userScore}',
+              'Your score: ${qBlocState.userScore}',
               style: const TextStyle(fontSize: 18),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            StreamBuilder<QuerySnapshot>(
-                stream: results,
-                builder: (
-                  BuildContext context,
-                  snapshot,
-                ) {
-                  if (snapshot.hasError) {
-                    return const Text(
-                        'Error in loading results from firestore');
-                  }
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
-                  }
-                  final data = snapshot.requireData;
-                  List<TableRow> results = getTableRowQuizResults(data.docs);
+            Flexible(
+              child: StreamBuilder<QuerySnapshot>(
+                  stream: results,
+                  builder: (
+                    BuildContext context,
+                    snapshot,
+                  ) {
+                    if (snapshot.hasError) {
+                      return const Text(
+                          'Error in loading results from firestore');
+                    }
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    }
+                    final data = snapshot.requireData;
+                    List<TableRow> results =
+                        getTableRowQuizResults(context, data.docs);
 
-                  return Container(
-                    height: 400,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        border:
-                            Border.all(color: colorScheme.tertiaryContainer)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: double.maxFinite,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: colorScheme.tertiaryContainer),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Text(
-                                'Rating for ${quiz.quizTheme!.name} ${quiz.quizDifficulty!.name}:',
-                                textAlign: TextAlign.center,
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color:
+                                colorScheme.tertiaryContainer.withOpacity(.2)),
+                        child: ListView(
+                          children: [
+                            Container(
+                              height: 50,
+                              width: double.maxFinite,
+                              decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(20),
+                                      topRight: Radius.circular(20)),
+                                  color: colorScheme.tertiaryContainer),
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: AutoSizeText(
+                                    'Rating for ${qBlocState.qTheme.name} ${qBlocState.qDifficulty.name}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                    minFontSize: 10,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Flexible(
-                              child: results.length > 1
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: SingleChildScrollView(
-                                        child: Table(
-                                          border: TableBorder(
-                                              horizontalInside: BorderSide(
-                                                  color: colorScheme
-                                                      .tertiaryContainer)),
-                                          columnWidths: const {
-                                            0: FlexColumnWidth(1),
-                                            2: FlexColumnWidth(1),
-                                            3: FlexColumnWidth(1),
-                                            4: FlexColumnWidth(1)
-                                          },
-                                          children:
-                                              getTableRowQuizResults(data.docs),
-                                        ),
-                                      ),
-                                    )
-                                  : const Center(
-                                      child: Text('Results not found'),
-                                    )),
-                        ],
+                            results.length > 1
+                                ? Table(
+                                    columnWidths: const {
+                                      0: FlexColumnWidth(1),
+                                      2: FlexColumnWidth(1),
+                                      3: FlexColumnWidth(1),
+                                      4: FlexColumnWidth(1)
+                                    },
+                                    children: getTableRowQuizResults(
+                                        context, data.docs),
+                                  )
+                                : const Center(
+                                    child: Text('Results not found'),
+                                  ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                }),
-            const SizedBox(height: 32),
-            _UploadResultsButtonWidget(quiz: quiz)
+                    );
+                  }),
+            ),
+            const SizedBox(height: 16),
+            _UploadResultsButtonWidget(),
+            const SizedBox(height: 16),
+            const _ReturnToMenuButton(),
           ],
         ),
       ),
@@ -211,9 +232,63 @@ class ResultsScreenWidget extends StatelessWidget {
   }
 }
 
+class _ReturnToMenuButton extends StatefulWidget {
+  const _ReturnToMenuButton({super.key});
+
+  @override
+  State<_ReturnToMenuButton> createState() => _ReturnToMenuButtonState();
+}
+
+class _ReturnToMenuButtonState extends State<_ReturnToMenuButton> {
+  @override
+  Widget build(BuildContext context) {
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
+    return Stack(
+      children: [
+        Hero(
+          tag: 'loading_questions',
+          child: Material(
+            type: MaterialType.transparency,
+            child: Container(
+                height: 50,
+                width: double.maxFinite,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withOpacity(.2),
+                  border: Border.all(color: colorScheme.primaryContainer),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Center(child: Text("Return to menu"))),
+          ),
+        ),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () async {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (_, __, ___) => const HomeScreenWidget(),
+                  transitionDuration: const Duration(milliseconds: 300),
+                  transitionsBuilder: (_, a, __, c) =>
+                      FadeTransition(opacity: a, child: c),
+                ),
+              );
+            },
+            splashColor: colorScheme.tertiaryContainer.withOpacity(.2),
+            hoverColor: colorScheme.tertiaryContainer.withOpacity(.2),
+            borderRadius: BorderRadius.circular(20),
+            child: const SizedBox(
+              height: 50,
+              width: double.maxFinite,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _UploadResultsButtonWidget extends StatefulWidget {
-  _UploadResultsButtonWidget({super.key, required this.quiz});
-  final Quiz quiz;
+  _UploadResultsButtonWidget({super.key});
   bool isLoading = false;
   bool wasUploaded = false;
 
@@ -229,11 +304,13 @@ class _UploadResultsButtonWidgetState
   @override
   Widget build(BuildContext context) {
     ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return Stack(
-      children: [
-        Hero(
-          tag: 'begin_button',
-          child: Material(
+    QuizBloc qBloc = BlocProvider.of<QuizBloc>(context);
+    QuizEndedState qBlocState = qBloc.state as QuizEndedState;
+    return Visibility(
+      visible: !widget.wasUploaded,
+      child: Stack(
+        children: [
+          Material(
             type: MaterialType.transparency,
             child: Container(
                 height: 50,
@@ -249,70 +326,68 @@ class _UploadResultsButtonWidgetState
                             ? const Text("Go to start")
                             : const Text("Upload results"))),
           ),
-        ),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () async {
-              if (widget.wasUploaded) {
-                Navigator.of(context).pushReplacement(
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const HomeScreenWidget(),
-                    transitionDuration: const Duration(milliseconds: 300),
-                    transitionsBuilder: (_, a, __, c) =>
-                        FadeTransition(opacity: a, child: c),
-                  ),
-                );
-                return;
-              }
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () async {
+                widget.isLoading = true;
+                setState(() {});
 
-              widget.isLoading = true;
-              setState(() {});
+                try {
+                  CollectionReference results =
+                      FirebaseFirestore.instance.collection('quiz_results');
 
-              CollectionReference results =
-                  FirebaseFirestore.instance.collection('quiz_results');
+                  results.add({
+                    'date': Timestamp.fromDate(DateTime.now()),
+                    'quiz_theme': qBlocState.qTheme.name,
+                    'quiz_difficulty': qBlocState.qDifficulty.name,
+                    'correct_answers_count':
+                        (qBlocState.userScore / 100).round(),
+                    'incorrect_answers_count': qBlocState.questions.length -
+                        (qBlocState.userScore / 100).round(),
+                    'score': qBlocState.userScore,
+                  });
 
-              int cAnswersCount = 0;
-              // for (Question q in widget.quiz.loadedQuestions) {
-              //   if (q.userCorrectAnswersCount == q.correctAnswersCount) {
-              //     cAnswersCount += 1;
-              //   }
-              // }
-              results.add({
-                'date': Timestamp.fromDate(DateTime.now()),
-                'quiz_theme': widget.quiz.quizTheme!.name,
-                'quiz_difficulty': widget.quiz.quizDifficulty!.name,
-                'correct_answers_count': cAnswersCount,
-                'incorrect_answers_count':
-                    widget.quiz.loadedQuestions.length - cAnswersCount,
-                'score': widget.quiz.userScore,
-              });
+                  widget.isLoading = false;
+                  widget.wasUploaded = true;
 
-              widget.isLoading = false;
-              widget.wasUploaded = true;
-              setState(() {});
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: colorScheme.tertiaryContainer,
+                    elevation: 20,
+                    duration: const Duration(seconds: 2),
+                    content: Text(
+                      "Your score was uploaded",
+                      style: TextStyle(color: colorScheme.inverseSurface),
+                    ),
+                  ));
+                } catch (e) {
+                  widget.wasUploaded = false;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: colorScheme.tertiaryContainer,
+                    elevation: 20,
+                    duration: const Duration(seconds: 2),
+                    content: Text(
+                      "Error when uploading score :c",
+                      style: TextStyle(color: colorScheme.inverseSurface),
+                    ),
+                  ));
+                }
 
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: colorScheme.tertiaryContainer,
-                elevation: 20,
-                duration: const Duration(seconds: 2),
-                content: Text(
-                  "Your score was uploaded",
-                  style: TextStyle(color: colorScheme.inverseSurface),
-                ),
-              ));
-            },
-            splashColor: colorScheme.tertiaryContainer.withOpacity(.2),
-            hoverColor: colorScheme.tertiaryContainer.withOpacity(.2),
-            borderRadius: BorderRadius.circular(20),
-            child: const SizedBox(
-              height: 50,
-              width: double.maxFinite,
+                setState(() {});
+              },
+              splashColor: colorScheme.tertiaryContainer.withOpacity(.2),
+              hoverColor: colorScheme.tertiaryContainer.withOpacity(.2),
+              borderRadius: BorderRadius.circular(20),
+              child: const SizedBox(
+                height: 50,
+                width: double.maxFinite,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

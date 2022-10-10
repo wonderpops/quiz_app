@@ -13,15 +13,20 @@ part 'quiz_state.dart';
 
 class QuizBloc extends Bloc<QuizEvent, QuizState> {
   List<Question> questions = [];
+  late QuizTheme _quizTheme;
+  late QuizDifficulty _quizDifficulty;
   int userScore = 0;
 
   QuizBloc() : super(QuizInitial()) {
     on<QuizThemeAndDifficultySelectEvent>(onThemeAndDifficultySelect);
     on<QuizLoadQuestionsEvent>(onQuizLoadQuestions);
+    on<QuizEndedEvent>(onQuizEnded);
   }
 
   onThemeAndDifficultySelect(
       QuizThemeAndDifficultySelectEvent event, Emitter<QuizState> emit) async {
+    _quizTheme = event.qTheme;
+    _quizDifficulty = event.qDifficulty;
     emit(QuizThemeAndDifficultySelectedState(
         qTheme: event.qTheme, qDifficulty: event.qDifficulty));
   }
@@ -74,5 +79,14 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
           answers: answers,
           correctAnswersCount: correctAnswersCount));
     }
+  }
+
+  onQuizEnded(QuizEndedEvent event, Emitter<QuizState> emit) async {
+    emit(QuizEndedState(
+      questions: questions,
+      qTheme: _quizTheme,
+      qDifficulty: _quizDifficulty,
+      userScore: userScore,
+    ));
   }
 }

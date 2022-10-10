@@ -20,3 +20,17 @@ class QuizStartedState extends QuizState {
 
   QuizStartedState({required this.questions});
 }
+
+class QuizEndedState extends QuizState {
+  final List<Question> questions;
+  final QuizTheme qTheme;
+  final QuizDifficulty qDifficulty;
+  final int userScore;
+
+  QuizEndedState({
+    required this.questions,
+    required this.qTheme,
+    required this.qDifficulty,
+    required this.userScore,
+  });
+}

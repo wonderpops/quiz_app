@@ -17,3 +17,5 @@ class QuizLoadQuestionsEvent extends QuizEvent {
 
   QuizLoadQuestionsEvent({required this.qTheme, required this.qDifficulty});
 }
+
+class QuizEndedEvent extends QuizEvent {}

@@ -298,23 +298,28 @@ class _BeginButtonWidgetState extends State<_BeginButtonWidget>
                     ),
                   );
                 default:
-                  return Container(
-                      height: 50,
-                      width: 200,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withOpacity(.3),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Center(
-                          child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: AutoSizeText(
-                          "Select theme and difficulty",
-                          minFontSize: 5,
-                          maxLines: 2,
-                          textAlign: TextAlign.center,
-                        ),
-                      )));
+                  return Hero(
+                    tag: 'loading_questions',
+                    child: Material(
+                      child: Container(
+                          height: 50,
+                          width: 200,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer.withOpacity(.3),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Center(
+                              child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: AutoSizeText(
+                              "Select theme and difficulty",
+                              minFontSize: 5,
+                              maxLines: 2,
+                              textAlign: TextAlign.center,
+                            ),
+                          ))),
+                    ),
+                  );
               }
             });
       },
